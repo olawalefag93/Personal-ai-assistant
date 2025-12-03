@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OlawaleAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: dark;
+    }
+    body {
+      margin: 0;
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #111827;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #020617;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      font-size: 1rem;
+      margin: 0;
+      font-weight: 600;
+    }
+    header span {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    select, input[type="text"] {
+      background: #020617;
+      border-radius: 9999px;
+      border: 1px solid #1f2937;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.75rem;
+      color: #e5e7eb;
+      outline: none;
+    }
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: #2563eb;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem;
+      gap: 0.75rem;
+      overflow: hidden;
+    }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      border-radius: 0.75rem;
+      border: 1px solid #111827;
+      padding: 0.75rem;
+      background: radial-gradient(circle at top left, #111827 0, #020617 50%);
+    }
+    .message {
+      max-width: 80%;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.75rem;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      margin-left: auto;
+      background: #1d4ed8;
+      color: #eff6ff;
+      border-bottom-right-radius: 0;
+    }
+    .message.assistant {
+      margin-right: auto;
+      background: #020617;
+      border: 1px solid #111827;
+      border-bottom-left-radius: 0;
+    }
+    .message small {
+      display: block;
+      opacity: 0.7;
+      font-size: 0.7rem;
+      margin-bottom: 0.15rem;
+    }
+    form {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+      border-top: 1px solid #111827;
+      padding-top: 0.5rem;
+    }
+    textarea {
+      flex: 1;
+      resize: none;
+      min-height: 2.5rem;
+      max-height: 7rem;
+      border-radius: 0.75rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    button {
+      border-radius: 9999px;
+      border: none;
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: #22c55e;
+      color: #022c22;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .status {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>OlawaleAI</h1>
+      <span>Personal AI · RAG + Memory · SSD: /mnt/external-ssd</span>
+    </div>
+    <div class="controls">
+      <label style="font-size:0.75rem;">
+        Mode:
+        <select id="mode">
+          <option value="">Default</option>
+          <option value="security">Security</option>
+          <option value="founder">Founder</option>
+          <option value="creator">Creator</option>
+        </select>
+      </label>
+      <label style="font-size:0.75rem;">
+        Session:
+        <input type="text" id="sessionId" />
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <div id="chat"></div>
+
+    <form id="chatForm">
+      <textarea id="messageInput" placeholder="Ask OlawaleAI something..." rows="2"></textarea>
+      <button type="submit" id="sendBtn">
+        <span>Send</span>
+      </button>
+    </form>
+    <div class="status" id="statusText"></div>
+  </main>
+
+  <script>
+    const chatEl = document.getElementById('chat');
+    const formEl = document.getElementById('chatForm');
+    const inputEl = document.getElementById('messageInput');
+    const modeEl = document.getElementById('mode');
+    const sessionEl = document.getElementById('sessionId');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusEl = document.getElementById('statusText');
+
+    function randomSessionId() {
+      return 'web-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    // Initialize a session id
+    if (!sessionEl.value) {
+      sessionEl.value = randomSessionId();
+    }
+
+    function appendMessage(role, text) {
+      const div = document.createElement('div');
+      div.classList.add('message', role);
+      const label = role === 'user' ? 'You' : 'OlawaleAI';
+      div.innerHTML = `<small>${label}</small>${text}`;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function sendMessage(message) {
+      const trimmed = message.trim();
+      if (!trimmed) return;
+
+      const mode = modeEl.value || null;
+      const sessionId = sessionEl.value || randomSessionId();
+
+      // Ensure session input matches what we send
+      sessionEl.value = sessionId;
+
+      appendMessage('user', trimmed);
+      inputEl.value = '';
+      inputEl.focus();
+
+      sendBtn.disabled = true;
+      statusEl.textContent = 'Thinking...';
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: trimmed,
+            mode: mode,
+            session_id: sessionId,
+          }),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          appendMessage('assistant', `Error: ${res.status} ${text}`);
+          statusEl.textContent = 'Error talking to backend.';
+        } else {
+          const data = await res.json();
+          appendMessage('assistant', data.reply);
+          // backend may normalize session_id, so sync it
+          if (data.session_id) {
+            sessionEl.value = data.session_id;
+          }
+          statusEl.textContent = 'Ready.';
+        }
+      } catch (err) {
+        console.error(err);
+        appendMessage('assistant', 'Error: Could not reach backend.');
+        statusEl.textContent = 'Connection error.';
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    formEl.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMessage(inputEl.value);
+    });
+
+    // Allow Ctrl+Enter to send
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        sendMessage(inputEl.value);
+      }
+    });
+
+    statusEl.textContent = 'Ready.';
+  </script>
+</body>
+</html>
+
