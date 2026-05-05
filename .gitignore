@@ -12,6 +12,7 @@ __pycache__/
 # Environment variables / secrets
 .env
 .env.*
+!.env.example
 
 # Data directories (local only)
 data/vector_store/

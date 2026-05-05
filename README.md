@@ -1,238 +1,198 @@
-# 🤖 Personal AI Assistant — Local RAG + Memory + Tools + Web UI
+# Personal AI Assistant
 
-A fully local, extensible **personal AI assistant** built with:
+A local AI assistant built with FastAPI, OpenAI, ChromaDB, SQLite memory, tool calling, and a simple web UI.
 
-- **FastAPI** backend  
-- **Retrieval-Augmented Generation (RAG)** using ChromaDB  
-- **Per-session conversation memory** powered by SQLite  
-- **Tool calling** (system info, log analysis, extendable)  
-- **Custom web UI**  
-- **Environment-based API key loading**  
-- **Everything stored locally** for privacy  
+This project is designed as a practical foundation for a private assistant that can answer questions, use local notes through retrieval-augmented generation, remember recent conversation context by session, and call backend tools.
 
-This project is designed so *anyone* can use it as a foundation to build their own AI assistant, automate tasks, enhance learning, or explore AI engineering concepts.
+## What It Does
 
----
+- Runs a FastAPI backend with a browser-based chat UI
+- Uses OpenAI chat models for assistant responses
+- Stores per-session chat history in SQLite
+- Uses ChromaDB for local vector search over notes
+- Supports tool calling through Python functions
+- Includes built-in tools for system information and log analysis
+- Keeps local notes, databases, logs, and API keys out of Git
 
-## 🚀 Features
+## Tech Stack
 
-### 🧠 Smart LLM Agent
-- Uses OpenAI models (via API) for reasoning and conversation.
-- Configurable “modes” (Security / Founder / Creator)
-- Supports multi-step reasoning + function calling for tools.
+- Python
+- FastAPI
+- OpenAI API
+- ChromaDB
+- SQLite
+- HTML, CSS, and JavaScript
+- python-dotenv
 
-### 📚 Retrieval-Augmented Generation (RAG)
-- Stores your personal notes locally.
-- Retrieves relevant information using embeddings.
-- Enhances answers with your private knowledge base.
-- All data is stored locally for privacy.
+## Project Structure
 
-### 💬 Conversation Memory (per session)
-- Stores chat history in SQLite.
-- AI remembers previous messages *within the same session*.
-- Does not store anything in the cloud.
-
-### 🧰 Tool Calling (Extensible)
-Built-in tools:
-- `get_system_info()` — machine information  
-- `analyze_log_file(path, max_lines, keyword)` — log inspection  
-
-Easily add your own tools:
-- Wazuh log reader  
-- Docker container monitor  
-- n8n workflow trigger  
-- File searcher  
-- Anything you want  
-
-### 🖥️ Custom Web UI
-- Clean & simple frontend
-- Session selector
-- Mode selector
-- Real-time interactions with your local AI
-
-### 🔐 Private by design
-- No logs sent to the cloud  
-- No notes uploaded anywhere  
-- API keys stored in `.env` only  
-- Vector database and memory stored on your device  
-
----
-
-## 🗂️ Project Structure
-
-
+```text
 personal-ai-assistant/
-│
-├── app/
-│ ├── main.py # FastAPI server, endpoints
-│ ├── llm_client.py # OpenAI client + tool logic
-│ ├── memory/ # SQLite memory system
-│ ├── rag/ # Embeddings + vector database
-│ ├── tools/ # Python tool functions
-│ └── models.py # Request/response models
-│
-├── scripts/
-│ └── ingest_all.py # RAG ingestion pipeline
-│
-├── web/
-│ └── frontend/
-│ └── index.html # Web UI
-│
-├── data/ # SQLite DB + ChromaDB (ignored)
-├── knowledge_base/ # Notes for RAG (ignored)
-│
-├── .gitignore
-├── README.md
-├── requirements.txt
-└── .env.example
+|-- app/
+|   |-- main.py              # FastAPI app, routes, chat endpoint
+|   |-- llm_client.py        # OpenAI chat + tool-calling wrapper
+|   |-- memory/              # SQLite conversation memory
+|   |-- rag/                 # Embeddings and ChromaDB access
+|   `-- tools/               # Python tools exposed to the assistant
+|-- scripts/
+|   `-- ingest_all.py        # Ingest local notes into ChromaDB
+|-- web/
+|   |-- frontend/index.html  # Browser chat UI
+|   `-- static/              # Static assets
+|-- .env.example
+|-- .gitignore
+|-- requirements.txt
+`-- README.md
+```
 
+## Setup
 
----
-
-## 🛠️ Setup Instructions
-
-### 1. Clone the repo
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/personal-ai-assistant.git
-cd personal-ai-assistant
+git clone https://github.com/olawalefag93/Personal-ai-assistant.git
+cd Personal-ai-assistant
+```
 
-2. Create & activate a virtual environment
+### 2. Create a virtual environment
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-3. Install dependencies
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
-4. Create your .env file
+```
+
+### 4. Configure environment variables
+
+```bash
 cp .env.example .env
-Open it:
-   nano .env
-Add your OpenAI API key:
-   OPENAI_API_KEY=sk-xxxx
+```
+
+Edit `.env` and add your OpenAI API key:
+
+```env
+OPENAI_API_KEY=your_api_key_here
+```
+
+The default local paths are:
+
+```env
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
-VECTOR_DB_PATH=./data/vector_store
 DB_PATH=./data/assistant.db
-5. Ingest your notes (optional but powerful)
-Add .md or .txt files to:
-knowledge_base/notes/
-Run ingestion:
+VECTOR_DB_PATH=./data/vector_store
+KNOWLEDGE_BASE_DIR=./knowledge_base/notes
+```
 
+### 5. Add local notes for RAG
+
+Create a local notes directory:
+
+```bash
+mkdir -p knowledge_base/notes
+```
+
+Add `.md` or `.txt` files to that directory, then ingest them:
+
+```bash
 python scripts/ingest_all.py
+```
 
-6. Start the server
+### 6. Start the app
+
+```bash
 uvicorn app.main:app --reload
+```
 
-7. Open the Web UI
+Open:
 
-Visit:
-
+```text
 http://127.0.0.1:8000
+```
 
-You're now chatting with your personal AI assistant!
+Health check:
 
-🔧 Adding Your Own Tools
+```text
+http://127.0.0.1:8000/health
+```
 
-Tools allow your AI to act, not just talk.
-Example tool (in app/tools/my_tool.py):
+## API Examples
 
-def say_hello(name: str):
-    return {"message": f"Hello, {name}!"}
+Chat endpoint:
 
+```bash
+curl -X POST http://127.0.0.1:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Summarize what this assistant can do.",
+    "mode": "default",
+    "session_id": "demo"
+  }'
+```
 
-Register it in TOOLS_SPEC and TOOLS_REGISTRY inside llm_client.py.
+System information tool endpoint:
 
-The LLM will automatically call this tool when needed.
+```text
+http://127.0.0.1:8000/tools/system-info
+```
 
-📚 How RAG Works
+## Assistant Modes
 
-Your notes → chunked → embedded → stored in ChromaDB.
+The chat endpoint accepts an optional `mode` value:
 
-When you ask a question:
+- `default` - general personal assistant behavior
+- `security` - SOC, logs, incident response, and cybersecurity workflows
+- `founder` - business, product, and operations guidance
+- `creator` - content ideas, hooks, scripts, and concise explanations
 
-Your query is embedded
+## Tool Calling
 
-Vector search retrieves the most relevant chunks
+The assistant can call backend tools through OpenAI function calling.
 
-Chunks are added to the LLM context
+Included tools:
 
-The AI answers using your own knowledge.
+- `get_system_info()` - returns basic host system information
+- `analyze_log_file(path, max_lines, keyword)` - reads and summarizes log content
 
-RAG = Your personal memory layer.
+New tools can be added by:
 
-💾 How Memory Works
+1. Creating a Python function in `app/tools/`
+2. Adding the function schema to `TOOLS_SPEC` in `app/llm_client.py`
+3. Registering the function in `TOOLS_REGISTRY`
 
-Each chat session gets a session_id
+## How RAG Works
 
-Messages are written to a SQLite database
+1. Add Markdown or text files to `knowledge_base/notes`.
+2. Run `python scripts/ingest_all.py`.
+3. The script chunks the files and stores embeddings in ChromaDB.
+4. User questions are embedded and matched against the local vector store.
+5. Relevant chunks are passed into the assistant context.
 
-Only messages for the current session are loaded
+## Local Data And Privacy
 
-AI can recall earlier messages in that session
+The following stay local and are ignored by Git:
 
-No messages leave your machine
+- `.env`
+- SQLite databases
+- ChromaDB vector store files
+- Logs
+- Private notes under `knowledge_base/notes`
 
-Memory = Short-term, session-based recall.
+## Roadmap
 
-🧱 Requirements
+- Add Docker support
+- Add automated tests
+- Add chat history browsing in the UI
+- Add authentication for the web UI
+- Add long-term memory summarization
+- Add Wazuh, Docker, and n8n automation tools
+- Add optional local model support through Ollama
 
-Python 3.10+
+## License
 
-OpenAI API key
-
-Basic command-line familiarity
-
-🛡️ Security
-
-This project includes safeguards:
-
-✔ API keys stored only in .env
-✔ .env, SQLite DBs, ChromaDB, logs, notes ignored in git
-✔ No personal data ever uploaded
-✔ GitHub push-protection friendly
-
-🧭 Roadmap (great for contributors)
-
-Add Docker monitoring tool
-
-Add Wazuh alerts tool
-
-Add n8n integration (trigger workflows)
-
-Add local model support (Ollama)
-
-Add long-term memory summarization
-
-Add authentication for the Web UI
-
-Add chat history browser in UI
-
-🤝 Contributing
-
-Fork the repo and open a pull request.
-Feel free to extend tools, RAG, UI, memory, or backend logic.
-
-📄 License
-
-MIT License.
-Feel free to reuse, modify, and build upon this project.
-
-⭐ Acknowledgements
-
-This project was built for learning and exploration in:
-
-AI engineering
-
-RAG systems
-
-Tool calling
-
-Backend architecture
-
-Cybersecurity automation
-
-Personal assistants
-
-If you build something cool on top of this — share it!
-
-
-
+MIT

@@ -10,7 +10,7 @@ load_dotenv()
 
 DB_PATH = os.getenv(
     "DB_PATH",
-    "/mnt/external-ssd/olawale_ai/data/olawale_ai.db",
+    "./data/assistant.db",
 )
 
 

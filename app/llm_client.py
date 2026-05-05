@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 from app.tools.log_tools import analyze_log_file
 
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ from app.tools.system_tools import get_system_info
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("open_ai_key"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or os.getenv("open_ai_key"))
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 # Tool specification for OpenAI function-calling
@@ -55,7 +55,7 @@ TOOLS_SPEC = [
         },
     },
 ]
-# Local registry mapping tool names → Python functions
+# Local registry mapping tool names to Python functions
 TOOLS_REGISTRY = {
     "get_system_info": get_system_info,
     "analyze_log_file": analyze_log_file,

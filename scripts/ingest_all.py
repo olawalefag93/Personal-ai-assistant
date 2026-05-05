@@ -9,8 +9,10 @@ from app.rag.vector_store import add_documents
 
 load_dotenv()
 
-BASE_DIR = Path("/mnt/external-ssd/olawale_ai")
-KB_DIR = BASE_DIR / "knowledge_base" / "notes"
+BASE_DIR = Path(__file__).resolve().parent.parent
+KB_DIR = Path(os.getenv("KNOWLEDGE_BASE_DIR", "./knowledge_base/notes")).expanduser()
+if not KB_DIR.is_absolute():
+    KB_DIR = BASE_DIR / KB_DIR
 
 COLLECTION_NAME = "knowledge"
 
@@ -52,7 +54,7 @@ def ingest_notes():
     all_metadatas = []
 
     for file_path in files:
-        rel_path = file_path.relative_to(BASE_DIR)
+        rel_path = file_path.relative_to(BASE_DIR) if file_path.is_relative_to(BASE_DIR) else file_path
         content = file_path.read_text(encoding="utf-8", errors="ignore")
         chunks = chunk_text(content, max_chars=1000)
 

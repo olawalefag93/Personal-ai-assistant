@@ -5,7 +5,7 @@ from openai import OpenAI
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("open_ai_key"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or os.getenv("open_ai_key"))
 
 # Cheap + good general-purpose embedding model
 EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")

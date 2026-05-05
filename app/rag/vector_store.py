@@ -6,10 +6,9 @@ from chromadb.utils import embedding_functions
 
 from app.rag.embeddings import embed_text
 
-# Default path lives on your SSD
 VECTOR_DB_PATH = os.getenv(
     "VECTOR_DB_PATH",
-    "/mnt/external-ssd/olawale_ai/data/vector_store",
+    "./data/vector_store",
 )
 
 client = chromadb.PersistentClient(path=VECTOR_DB_PATH)
